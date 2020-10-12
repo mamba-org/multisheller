@@ -17,11 +17,11 @@ This grew out of a frustration on how hard it is to write bash / cmd.bat scripts
 Examples:
 
 ```py
-import sh
+from multisheller import cmds, path
 
-conda_prefix = sh.env("CONDA_PREFIX")
-print(sh.if_(conda_prefix == "test").then_(
-	sh.export("TEST_VARIABLE", sh.path_join(sh.env("CONDA_PREFIX"), "test/for/something"))
+conda_prefix = cmds.env("CONDA_PREFIX")
+print(cmds.if_(conda_prefix == "test").then_(
+	cmds.export("TEST_VARIABLE", path.join(cmds.env("CONDA_PREFIX"), "test/for/something"))
 ))
 ```
 
