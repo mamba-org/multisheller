@@ -8,31 +8,33 @@ def ensure_quotes(x):
       return f"\"{re.escape(x)}\""
 
 
-class BashVisitor(NodeVisitor):
+class CmdExeVisitor(NodeVisitor):
     def visit_BinOp(self, op):
         op_map = {
-            'add': '+',
-            'eq': '==',
-            'lt': '-lt',
-            'le': '-le',
-            'gt': '-gt',
-            'ge': '-ge',
-            'or': '||',
-            'and': '&&',
+            # 'add': '+',
+            'eq': 'EQU',
+            'lt': 'LSS',
+            'le': 'LEQ',
+            'gt': 'GTR',
+            'ge': 'GEQ',
+            # 'or': '||',
+            # 'and': '&&',
         }
 
         if op.op in ('export', 'assign'):
             if op.op == 'export':
-                return f"export {self.visit(op.lhs)}={self.visit(op.rhs)}"
+                return f"set {self.visit(op.lhs)}={self.visit(op.rhs)}"
             else:
                 return f"{self.visit(op.lhs)}={self.visit(op.rhs)}"
         return f"{self.visit(op.lhs)} {op_map[op.op]} {self.visit(op.rhs)}"
 
     def visit_UnaryOp(self, op):
         op_map = {
-            'is_set': '-z',
-            'not': '!'
+            'not': 'NOT'
         }
+        if node.op == 'is_set':
+            return f"{ensure_quoted(self.visit(op.value))}==\"\""
+
         return f"{op_map[op.op]} {self.visit(op.value)}"
 
     def visit_StrOp(self, node):
@@ -47,16 +49,16 @@ class BashVisitor(NodeVisitor):
             return f"{q(self.visit(node.lhs))} == *{q(self.visit(node.rhs))}*"
 
     def visit_Env(self, op):
-        return f"${self.visit(op.varname)}"
+        return f"%{self.visit(op.varname)}%"
 
     def visit_Conditional(self, op):
         then_expr, else_expr = "", ""
         if op.then_expr:
-            then_expr = f"\nthen\n    {self.visit(op.then_expr)}"
+            then_expr = f"(\n    {self.visit(op.then_expr)}\n)"
         if op.else_expr:
-            else_expr = f"\nelse\n    {self.visit(op.else_expr)}"
+            else_expr = f" else (\n    {self.visit(op.else_expr)}\n)"
 
-        return f"if [[ {self.visit(op.if_expr)} ]];{then_expr}{else_expr}\nfi;"
+        return f"if ({self.visit(op.if_expr)}) {then_expr}{else_expr}\n"
 
     def visit_Call(self, op):
         return f"{op.cmd} {' '.join(op.args)}"
@@ -66,7 +68,7 @@ class BashVisitor(NodeVisitor):
 
 def to_script(script):
     res = []
-    visitor = BashVisitor()
+    visitor = CmdExeVisitor()
 
     for cmd in script.cmds:
         res.append(visitor.visit(cmd))

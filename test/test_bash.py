@@ -16,7 +16,7 @@ def write_script(path, name, commands):
 
 	return fname
 
-def call_bash(f):
+def call_interpreter(f):
 	res = subprocess.run(["bash", f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 	stdout = res.stdout.decode('utf-8').strip()
 	stderr = res.stderr.decode('utf-8').strip()
@@ -26,7 +26,7 @@ def test_hello_world(tmp_path):
 	s = write_script(tmp_path, 'hello_world', [
 		cmds.echo("hello world")
 	])
-	stdout, stderr = call_bash(s)
+	stdout, stderr = call_interpreter(s)
 	assert (stdout == "hello world")
 
 def test_if_else(tmp_path):
@@ -37,7 +37,7 @@ def test_if_else(tmp_path):
 		)
 	])
 
-	stdout, stderr = call_bash(s)
+	stdout, stderr = call_interpreter(s)
 	assert (stdout == "YES")
 
 	s = write_script(tmp_path, 'test_if_else', [
@@ -49,7 +49,7 @@ def test_if_else(tmp_path):
 		)
 	])
 
-	stdout, stderr = call_bash(s)
+	stdout, stderr = call_interpreter(s)
 	assert (stdout == "NOPE")
 
 def test_startwsith_endswith(tmp_path):
@@ -63,7 +63,7 @@ def test_startwsith_endswith(tmp_path):
 		check(cmds.contains("ITSATEST", "ATE"))
 	])
 
-	stdout, stderr = call_bash(s)
+	stdout, stderr = call_interpreter(s)
 	assert (stdout.splitlines() == ["YES"] * 3)
 
 
@@ -78,7 +78,7 @@ def test_and_or(tmp_path):
 		cmds.if_(cmds.or_(cmds.is_set("somevar"), cmds.is_set("nope"))).then_(cmds.echo("YES")).else_(cmds.echo("NOPE")),
 	])
 
-	stdout, stderr = call_bash(s)
+	stdout, stderr = call_interpreter(s)
 	assert (stdout.splitlines() == ["YES", "NOPE", "YES"])
 
 def test_cmp(tmp_path):
@@ -90,7 +90,7 @@ def test_cmp(tmp_path):
 		cmds.if_(cmds.env("somevar") < 100).then_(cmds.echo("YES")).else_(cmds.echo("NOPE")),
 	])
 
-	stdout, stderr = call_bash(s)
+	stdout, stderr = call_interpreter(s)
 	assert (stdout.splitlines() == ["YES", "NOPE"] * 2)
 
 # if __name__ == '__main__':
