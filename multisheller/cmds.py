@@ -1,55 +1,37 @@
 import re
 
+class Script:
+	def __init__(self, cmd_list):
+		self.cmds = cmd_list
+
 class BinOpNode:
-	def __init__(self, lhs, rhs):
+	def __init__(self, op, lhs, rhs):
+		self.op  = op
 		self.lhs = lhs
 		self.rhs = rhs
 
-class EqNode(BinOpNode):
-	def __str__(self):
-		return f"{self.lhs} == {self.rhs}"
-
-class AndNode(BinOpNode):
-	def __str__(self):
-		return f"{self.lhs} && {self.rhs}"
-
-class OrNode(BinOpNode):
-	def __str__(self):
-		return f"{self.lhs} || {self.rhs}"
+class UnaryOpNode:
+	def __init__(self, op, value):
+		self.op  = op
+		self.value = value
 
 def and_(lhs, rhs):
-	return AndNode(lhs, rhs)
+	return BinOpNode('and', lhs, rhs)
 
 def or_(lhs, rhs):
-	return OrNode(lhs, rhs)
+	return BinOpNode('or', lhs, rhs)
 
 class Node:
 	def __eq__(self, rhs):
-		return CmpNode('eq', self, rhs)
+		return BinOpNode('eq', self, rhs)
 	def __lt__(self, rhs):
-		return CmpNode('lt', self, rhs)
+		return BinOpNode('lt', self, rhs)
 	def __le__(self, rhs):
-		return CmpNode('le', self, rhs)
+		return BinOpNode('le', self, rhs)
 	def __gt__(self, rhs):
-		return CmpNode('gt', self, rhs)
+		return BinOpNode('gt', self, rhs)
 	def __ge__(self, rhs):
-		return CmpNode('ge', self, rhs)
-
-class CmpNode(Node):
-	def __init__(self, op, lhs, rhs):
-		self.op = op
-		self.lhs = lhs
-		self.rhs = rhs
-		self.opmap = {
-			'eq': '==',
-			'lt': '<',
-			'le': '-le',
-			'gt': '>',
-			'ge': '-ge',
-		}
-
-	def __str__(self):
-		return f"{self.lhs} {self.opmap[self.op]} {self.rhs}"
+		return BinOpNode('ge', self, rhs)
 
 class EnvNode(Node):
 	def __init__(self, varname):
@@ -61,12 +43,12 @@ class EnvNode(Node):
 def env(name):
 	return EnvNode(name)
 
-def StrNode(node):
-	def __str__(self):
-		return f"\"{self}\""
+# class StrNode(Node):
+# 	def __init__(self, val):
+# 		return f"\"{val}\""
 
-def str(val):
-	return StrNode(val)
+# def str(val):
+# 	return StrNode(val)
 
 class ConditionalNode:
 	def __init__(self, if_expr):
@@ -82,55 +64,43 @@ class ConditionalNode:
 		self.else_expr = expr
 		return self
 
-	def __str__(self):
-		then_expr, else_expr = "", ""
-		if self.then_expr:
-			then_expr = f"\nthen\n    {self.then_expr}"
-		if self.else_expr:
-			else_expr = f"\nelse\n    {self.else_expr}"
-
-		return f"if [[ {self.if_expr} ]];{then_expr}{else_expr}\nfi;"
+class StrOpNode(Node):
+	def __init__(self, op, lhs, rhs=None):
+		self.op = op
+		self.lhs = lhs
+		self.rhs = rhs
 
 def quoted(x):
-	if x[0] == '"' or x[0] == '\'' and x[-1] == x[0]:
-		return x
-	else:
-		return f"\"{re.escape(x)}\""
+	return StrOpNode('quote', x)
 
 def ends_with(lhs, rhs):
-	# TODO
-	return f"{quoted(lhs)} == *{quoted(rhs)}"
-
-def echo(x):
-	return f"echo {x}"
+	return StrOpNode('ends_with', lhs, rhs)
 
 def contains(lhs, rhs):
-	# TODO
-	return f"{quoted(lhs)} == *{quoted(rhs)}*"
+	return StrOpNode('contains', lhs, rhs)
 
 def starts_with(lhs, rhs):
-	# TODO
-	# bash: [[ $TEST == "{rhs}"* ]]
-	return f"{quoted(lhs)} == {quoted(rhs)}*"
+	return StrOpNode('starts_with', lhs, rhs)
 
 def is_set(var):
 	if type(var) is not EnvNode:
 		var = EnvNode(var)
-	return f"-z {var}"
+	return UnaryOpNode('is_set', var)
+	# return f"-z {var}"
+
+class CallNode(Node):
+	def __init__(self, cmd, args):
+		self.cmd = cmd
+		self.args = args
+
+def echo(x):
+	return CallNode('echo', [x])
 
 def exit(code):
-	return f"exit {code}"
-
-class ExportNode:
-	def __init__(self, var, rhs):
-		self.var = var
-		self.rhs = rhs
-
-	def __str__(self):
-		return f"export {self.var}={self.rhs}"
+	return CallNode('exit', [code])
 
 def export(lhs, rhs):
-	return ExportNode(lhs, rhs)
+	return BinOpNode('export', lhs, rhs)
 
 def if_(expr):
 	return ConditionalNode(expr)

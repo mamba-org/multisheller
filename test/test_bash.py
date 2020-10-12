@@ -4,14 +4,16 @@ import sys, os
 sys.path.append(os.path.dirname(__file__) + '/..')
 
 from multisheller import cmds
+from multisheller.backend import bash
 
 def write_script(path, name, commands):
+	s = cmds.Script(commands)
 	fname = os.path.join(path, name + '.sh')
 	with open(fname, 'w') as f:
-		for cmd in commands:
-			print(str(cmd))
-			f.write(str(cmd))
-			f.write('\n')
+		s = bash.to_script(s)
+		print(s)
+		f.write(s)
+
 	return fname
 
 def call_bash(f):
