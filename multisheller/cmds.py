@@ -21,6 +21,9 @@ def and_(lhs, rhs):
 def or_(lhs, rhs):
 	return BinOpNode('or', lhs, rhs)
 
+def not_(node):
+	return UnaryOpNode('not', rhs)
+
 class Node:
 	def __eq__(self, rhs):
 		return BinOpNode('eq', self, rhs)
@@ -33,15 +36,18 @@ class Node:
 	def __ge__(self, rhs):
 		return BinOpNode('ge', self, rhs)
 
-class EnvNode(Node):
+class VarNode(Node):
 	def __init__(self, varname):
 		self.varname = varname
 
-	def __str__(self):
-		return "${}".format(self.varname)
+class EnvNode(VarNode):
+	pass
 
 def env(name):
 	return EnvNode(name)
+
+def var(name):
+	return VarNode(name)
 
 # class StrNode(Node):
 # 	def __init__(self, val):
@@ -101,6 +107,9 @@ def exit(code):
 
 def export(lhs, rhs):
 	return BinOpNode('export', lhs, rhs)
+
+def unset(var):
+	return UnaryOpNode('unset', var)
 
 def if_(expr):
 	return ConditionalNode(expr)

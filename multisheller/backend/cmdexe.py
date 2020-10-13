@@ -17,6 +17,7 @@ class CmdExeVisitor(NodeVisitor):
             'le': 'LEQ',
             'gt': 'GTR',
             'ge': 'GEQ',
+            'ne': 'NEQ'
             # 'or': '||',
             # 'and': '&&',
         }
@@ -58,16 +59,19 @@ class CmdExeVisitor(NodeVisitor):
         if op.else_expr:
             else_expr = f" else (\n    {self.visit(op.else_expr)}\n)"
 
-        return f"if ({self.visit(op.if_expr)}) {then_expr}{else_expr}\n"
+        return f"if {self.visit(op.if_expr)} {then_expr}{else_expr}\n"
 
     def visit_Call(self, op):
+        if op.cmd == 'echo':
+            # return f"{op.cmd} {ensure_quotes(' '.join(op.args))}"
+            pass
         return f"{op.cmd} {' '.join(op.args)}"
 
     def visit_default(self, node):
         return str(node)
 
 def to_script(script):
-    res = []
+    res = ['@echo off']
     visitor = CmdExeVisitor()
 
     for cmd in script.cmds:

@@ -12,11 +12,12 @@ class BashVisitor(NodeVisitor):
     def visit_BinOp(self, op):
         op_map = {
             'add': '+',
-            'eq': '==',
+            'eq': '-eq',
             'lt': '-lt',
             'le': '-le',
             'gt': '-gt',
             'ge': '-ge',
+            'ne': '-ne'
             'or': '||',
             'and': '&&',
         }
