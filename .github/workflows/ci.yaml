@@ -33,7 +33,7 @@ jobs:
           export MAMBA_ROOT_PREFIX=~/micromamba
           export MAMBA_EXE=$(pwd)/micromamba
           . $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh
-          ./micromamba create -f ./test/env.yaml -y
+          ./micromamba create -f ./test/env_unix.yaml -y
       - name: run tests
         shell: bash -l {0}
         run: |
@@ -65,7 +65,7 @@ jobs:
         run: |
           $Env:MAMBA_ROOT_PREFIX=(Join-Path -Path $HOME -ChildPath micromamba)
           $Env:MAMBA_EXE=(Join-Path -Path (Get-Location) -ChildPath micromamba.exe)
-          .\micromamba.exe create -f ./test/env.yaml -y
+          .\micromamba.exe create -f ./test/env_win.yaml -y
       - name: run tests
         shell: powershell
         run: |
