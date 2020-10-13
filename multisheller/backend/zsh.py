@@ -31,8 +31,9 @@ class BashVisitor(NodeVisitor):
 
     def visit_UnaryOp(self, op):
         op_map = {
-            'is_set': '-z',
-            'not': '!'
+            'is_set': '! -z',
+            'not': '!',
+            'unset': 'unset'
         }
         return f"{op_map[op.op]} {self.visit(op.value)}"
 

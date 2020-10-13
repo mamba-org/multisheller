@@ -9,7 +9,7 @@ def ensure_quotes(x):
 
 
 class CmdExeVisitor(NodeVisitor):
-    def visit_BinOp(self, op):
+    def visit_BinOp(self, node):
         op_map = {
             # 'add': '+',
             'eq': 'EQU',
@@ -22,21 +22,22 @@ class CmdExeVisitor(NodeVisitor):
             # 'and': '&&',
         }
 
-        if op.op in ('export', 'assign'):
-            if op.op == 'export':
-                return f"set {self.visit(op.lhs)}={self.visit(op.rhs)}"
+        if node.op in ('export', 'assign'):
+            if node.op == 'export':
+                return f"set {self.visit(node.lhs)}={self.visit(node.rhs)}"
             else:
-                return f"{self.visit(op.lhs)}={self.visit(op.rhs)}"
-        return f"{self.visit(op.lhs)} {op_map[op.op]} {self.visit(op.rhs)}"
+                return f"{self.visit(node.lhs)}={self.visit(node.rhs)}"
+        return f"{self.visit(node.lhs)} {op_map[node.op]} {self.visit(node.rhs)}"
 
-    def visit_UnaryOp(self, op):
+    def visit_UnaryOp(self, node):
         op_map = {
             'not': 'NOT'
         }
         if node.op == 'is_set':
-            return f"{ensure_quoted(self.visit(op.value))}==\"\""
-
-        return f"{op_map[op.op]} {self.visit(op.value)}"
+            return f"{ensure_quotes(self.visit(node.value))} NEQ \"\""
+        if node.op == 'unset':
+            return f"set {node.value.varname}="
+        return f"{op_map[node.op]} {self.visit(node.value)}"
 
     def visit_StrOp(self, node):
         q = ensure_quotes

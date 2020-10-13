@@ -42,7 +42,7 @@ jobs:
           . $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh
           micromamba activate test
           pip install -e .
-          pytest test/test_bash.py test/test_zsh.py test/test_xonsh.py
+          pytest test/
 
   test_win_shells:
     runs-on: ${{ matrix.os }}
@@ -71,7 +71,7 @@ jobs:
         run: |
           # micromamba activate test
           ~/micromamba/envs/test/Scripts/pip.exe install -e .
-          ~/micromamba/envs/test/Scripts/pytest.exe test/test_powershell.py test/test_cmdexe.py
+          ~/micromamba/envs/test/Scripts/pytest.exe test/
           if ($LastExitCode -ne 0) {
             exit 1
           }

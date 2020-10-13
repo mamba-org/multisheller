@@ -35,6 +35,8 @@ class BashVisitor(NodeVisitor):
         }
         if op.op == 'is_set':
             return ensure_quotes(op.value.varname) + " in ${...}"
+        if op.op == 'unset':
+            return f"del ${ensure_quotes(op.value.varname)}"
         return f"{op_map[op.op]} {self.visit(op.value)}"
 
     def visit_StrOp(self, node):
