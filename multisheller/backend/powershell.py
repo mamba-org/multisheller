@@ -72,9 +72,9 @@ class PowerShellVisitor(NodeVisitor):
     def visit_Conditional(self, op):
         then_expr, else_expr = "", ""
         if op.then_expr:
-            then_expr = "{\n    " + self.visit(op.then_expr) + "}\n"
+            then_expr = "{\n    " + self.visit(op.then_expr) + "\n}\n"
         if op.else_expr:
-            else_expr = "else {\n    " + self.visit(op.else_expr) + "}\n"
+            else_expr = "else {\n    " + self.visit(op.else_expr) + "\n}\n"
 
         return f"if ({self.visit(op.if_expr)}) {then_expr}{else_expr}\n"
 

@@ -22,10 +22,10 @@ def call_interpreter(f):
     # return "", ""
     # pass
     res = subprocess.run(["powershell.exe", "-File", f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-    stdout = res.stdout.decode('unicode_escape').strip()
+    stdout = res.stdout.decode('utf-8').strip()
     stdout = '\n'.join([l for l in stdout.splitlines() if l.strip()])
     print("STDOUT: ", res)
-    stderr = res.stderr.decode('unicode_escape').strip()
+    stderr = res.stderr.decode('utf-8').strip()
     return stdout, stderr
 
 def test_hello_world(tmp_path):

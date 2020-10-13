@@ -1,0 +1,43 @@
+name: CI_WIN
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  test_win_shells:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - name: install micromamba
+        shell: powershell
+        run: |
+          Invoke-Webrequest -URI https://anaconda.org/conda-forge/micromamba/0.5.3/download/win-64/micromamba-0.5.3-ha925a31_0.tar.bz2 -OutFile micromamba.tar.bz2
+          C:\PROGRA~1\7-Zip\7z.exe x micromamba.tar.bz2 -aoa
+          C:\PROGRA~1\7-Zip\7z.exe x micromamba.tar -ttar -aoa -r Library\bin\micromamba.exe
+          MOVE -Force Library\bin\micromamba.exe micromamba.exe
+          .\micromamba.exe shell init -s powershell -p ~/micromamba
+      - name: install deps
+        shell: powershell
+        run: |
+          $Env:MAMBA_ROOT_PREFIX=(Join-Path -Path $HOME -ChildPath micromamba)
+          $Env:MAMBA_EXE=(Join-Path -Path (Get-Location) -ChildPath micromamba.exe)
+          .\micromamba.exe create -f ./test/env.yaml -y
+      - name: run tests
+        shell: powershell
+        run: |
+          # micromamba activate test
+          ~/micromamba/envs/test/Scripts/pip.exe install -e .
+          ~/micromamba/envs/test/Scripts/pytest.exe test/test_powershell.py test/test_cmdexe.py
+          if ($LastExitCode -ne 0) {
+            exit 1
+          }
+

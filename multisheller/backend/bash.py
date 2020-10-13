@@ -17,7 +17,7 @@ class BashVisitor(NodeVisitor):
             'le': '-le',
             'gt': '-gt',
             'ge': '-ge',
-            'ne': '-ne'
+            'ne': '-ne',
             'or': '||',
             'and': '&&',
         }
