@@ -42,7 +42,7 @@ jobs:
           . $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh
           micromamba activate test
           pip install -e .
-          pytest test/test_bash.py test/test_zsh.py
+          pytest test/test_bash.py test/test_zsh.py test/test_xonsh.py
 
   test_win_shells:
     runs-on: ${{ matrix.os }}
