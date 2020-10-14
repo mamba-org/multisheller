@@ -3,25 +3,10 @@ import sys, os
 
 from multisheller import cmds
 from multisheller.backend import bash, zsh, xonsh, cmdexe, powershell
+from multisheller.backend.utils import write_script, suffixes, translators
 
 def emit_check(cond):
     return cmds.if_(cond).then_(cmds.echo("YES")).else_(cmds.echo("NOPE"))
-
-suffixes = {
-    'cmdexe': '.bat',
-    'bash': '.sh',
-    'zsh': '.sh',
-    'xonsh': '.sh',
-    'powershell': '.ps1',
-}
-
-translators = {
-    'cmdexe': cmdexe,
-    'bash': bash,
-    'zsh': zsh,
-    'xonsh': xonsh,
-    'powershell': powershell,
-}
 
 enable_on_os = {
     'win': {'powershell', 'cmdexe'},
@@ -32,17 +17,6 @@ if os.name == 'nt':
     running_os = 'win'
 else:
     running_os = 'unix'
-
-def write_script(path, commands, interpreter):
-    s = cmds.Script(commands)
-    fname = os.path.join(path, 'script' + suffixes[interpreter])
-
-    with open(fname, 'w') as f:
-        s = translators[interpreter].to_script(s)
-        print(s)
-        f.write(s)
-
-    return fname
 
 def call_interpreter(s, tmp_path, interpreter):
     f = write_script(tmp_path, s, interpreter)

@@ -1,8 +1,16 @@
+from textwrap import indent
+
 def str_quote(x):
     if type(x) is str:
         return f"\"{x}\""
     else:
         return x
+
+def join_expr(expr_list, visitor):
+    final_expr = []
+    for el in expr_list:
+        final_expr.append(visitor(el))
+    return indent('\n'.join(final_expr), '    ')
 
 sh_path_functions = """
 # Taken from http://www.linuxfromscratch.org/blfs/view/svn/postlfs/profile.html

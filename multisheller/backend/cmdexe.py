@@ -1,4 +1,5 @@
 from .visitor import NodeVisitor
+from .common import join_expr
 import re
 
 def ensure_quotes(x):
@@ -56,9 +57,9 @@ class CmdExeVisitor(NodeVisitor):
     def visit_Conditional(self, op):
         then_expr, else_expr = "", ""
         if op.then_expr:
-            then_expr = f"(\n    {self.visit(op.then_expr)}\n)"
+            then_expr = f"(\n{join_expr(op.then_expr, self.visit)}\n)"
         if op.else_expr:
-            else_expr = f" else (\n    {self.visit(op.else_expr)}\n)"
+            else_expr = f" else (\n{join_expr(op.else_expr, self.visit)}\n)"
 
         return f"if {self.visit(op.if_expr)} {then_expr}{else_expr}\n"
 

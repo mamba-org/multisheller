@@ -1,4 +1,4 @@
-from .common import sh_path_functions
+from .common import sh_path_functions, join_expr
 from .visitor import NodeVisitor
 import re
 
@@ -55,9 +55,9 @@ class BashVisitor(NodeVisitor):
     def visit_Conditional(self, op):
         then_expr, else_expr = "", ""
         if op.then_expr:
-            then_expr = f"\nthen\n    {self.visit(op.then_expr)}"
+            then_expr = f"\nthen\n{join_expr(op.then_expr, self.visit)}"
         if op.else_expr:
-            else_expr = f"\nelse\n    {self.visit(op.else_expr)}"
+            else_expr = f"\nelse\n{join_expr(op.else_expr, self.visit)}"
 
         return f"if [[ {self.visit(op.if_expr)} ]];{then_expr}{else_expr}\nfi;"
 

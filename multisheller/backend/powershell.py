@@ -70,19 +70,19 @@ class PowerShellVisitor(NodeVisitor):
     def visit_Var(self, op):
         return f"${self.visit(op.varname)}"
 
-    def visit_Conditional(self, op):
+    def visit_Conditional(self, node):
         then_expr, else_expr = "", ""
-        if op.then_expr:
-            then_expr = "{\n    " + self.visit(op.then_expr) + "\n}\n"
-        if op.else_expr:
-            else_expr = "else {\n    " + self.visit(op.else_expr) + "\n}\n"
+        if node.then_expr:
+            then_expr = "{\n" + join_expr(node.then_expr, self.visit) + "\n}\n"
+        if node.else_expr:
+            else_expr = "else {\n" + join_expr(node.else_expr, self.visit) + "\n}\n"
 
-        return f"if ({self.visit(op.if_expr)}) {then_expr}{else_expr}\n"
+        return f"if ({self.visit(node.if_expr)}) {then_expr}{else_expr}\n"
 
     def visit_PathOp(self, node):
         q = ensure_quotes
         if node.op == 'join':
-            return f"(Join-Path -Path {self.visit(node.lhs)} -ChildPath {self.visit(node.rhs)})"
+            return f"$(Join-Path -Path {self.visit(node.lhs)} -ChildPath {self.visit(node.rhs)})"
         elif node.op == 'is_file':
             return f"Test-Path {self.visit(node.lhs)} -PathType Leaf"
         if node.op == 'is_dir':

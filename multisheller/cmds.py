@@ -1,4 +1,5 @@
 import re
+from collections.abc import Iterable
 
 class Script:
 	def __init__(self, cmd_list):
@@ -63,10 +64,15 @@ class ConditionalNode:
 		self.else_expr = None
 	# implement wwiht reipeated __call__?
 	def then_(self, expr):
+		if type(expr) is str or not isinstance(expr, Iterable):
+			expr = [expr]
 		self.then_expr = expr
 		return self
 
 	def else_(self, expr):
+		if type(expr) is str or not isinstance(expr, Iterable):
+			expr = [expr]
+
 		self.else_expr = expr
 		return self
 
