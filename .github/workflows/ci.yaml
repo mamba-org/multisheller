@@ -55,7 +55,7 @@ jobs:
       - name: install micromamba
         shell: powershell
         run: |
-          Invoke-Webrequest -URI https://anaconda.org/conda-forge/micromamba/0.5.3/download/win-64/micromamba-0.5.3-ha925a31_0.tar.bz2 -OutFile micromamba.tar.bz2
+          Invoke-Webrequest -URI https://micromamba.snakepit.net/api/micromamba/win-64/latest -OutFile micromamba.tar.bz2
           C:\PROGRA~1\7-Zip\7z.exe x micromamba.tar.bz2 -aoa
           C:\PROGRA~1\7-Zip\7z.exe x micromamba.tar -ttar -aoa -r Library\bin\micromamba.exe
           MOVE -Force Library\bin\micromamba.exe micromamba.exe
