@@ -1,3 +1,4 @@
+from .common import sh_path_functions
 from .visitor import NodeVisitor
 import re
 
@@ -60,8 +61,22 @@ class BashVisitor(NodeVisitor):
 
         return f"if [[ {self.visit(op.if_expr)} ]];{then_expr}{else_expr}\nfi;"
 
-    def visit_Call(self, op):
-        return f"{op.cmd} {' '.join(op.args)}"
+    def visit_Call(self, node):
+        return f"{node.cmd} {' '.join([self.visit(arg) for arg in node.args])}"
+
+    def visit_PathOp(self, node):
+        if node.op == 'join':
+            return f"{self.visit(node.lhs)}/{self.visit(node.rhs)}"
+        elif node.op == 'is_file':
+            return f"-f {self.visit(node.lhs)}"
+        if node.op == 'is_dir':
+            return f"-d {self.visit(node.lhs)}"
+        if node.op == 'path_remove':
+            return "path=(${path[@]:#" + self.visit(node.lhs) + "})"
+        if node.op == 'path_append':
+            return f"path+=({self.visit(node.lhs)})"
+        if node.op == 'path_prepend':
+            return f"path=({self.visit(node.lhs)} $path)"
 
     def visit_default(self, node):
         return str(node)

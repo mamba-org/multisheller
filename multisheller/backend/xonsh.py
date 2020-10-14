@@ -62,17 +62,45 @@ class BashVisitor(NodeVisitor):
 
         return f"if ({self.visit(op.if_expr)}):{then_expr}{else_expr}\n"
 
-    def visit_Call(self, op):
-        return f"{op.cmd} {' '.join(op.args)}"
+    def visit_Call(self, node):
+        def str_quote(x):
+            if type(x) == str:
+                return f"\"{x}\""
+            else:
+                return x
+        args = ' '.join([self.visit(str_quote(arg)) for arg in node.args])
+        return f"{node.cmd} {args}"
+
+    def visit_PathOp(self, node):
+        q = ensure_quotes
+        if node.op == 'join':
+            return f"@(os.path.join({q(self.visit(node.lhs))}, {q(self.visit(node.rhs))}))"
+        elif node.op == 'is_file':
+            return f"os.path.isfile({q(self.visit(node.lhs))})"
+        if node.op == 'is_dir':
+            return f"os.path.isdir({q(self.visit(node.lhs))})"
+        if node.op == 'path_remove':
+            rm_path = q(self.visit(node.lhs))
+            return f"while({rm_path} in $PATH): $PATH.remove({rm_path})"
+        if node.op == 'path_append':
+            return f"$PATH.append({q(self.visit(node.lhs))})"
+        if node.op == 'path_prepend':
+            return f"$PATH.insert(0, {q(self.visit(node.lhs))})"
 
     def visit_default(self, node):
         return str(node)
 
+
+xonsh_imports = """
+import os, sys
+"""
+
 def to_script(script):
+
     res = []
     visitor = BashVisitor()
 
     for cmd in script.cmds:
         res.append(visitor.visit(cmd))
 
-    return '\n'.join(res)
+    return xonsh_imports + '\n'.join(res)

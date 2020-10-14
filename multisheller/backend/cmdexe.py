@@ -66,7 +66,7 @@ class CmdExeVisitor(NodeVisitor):
         if op.cmd == 'echo':
             # return f"{op.cmd} {ensure_quotes(' '.join(op.args))}"
             pass
-        return f"{op.cmd} {' '.join(op.args)}"
+        return f"{op.cmd} {' '.join([self.visit(arg) for arg in op.args])}"
 
     def visit_default(self, node):
         return str(node)
