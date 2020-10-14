@@ -1,4 +1,6 @@
 from .visitor import NodeVisitor
+from .common import *
+
 import re
 
 def ensure_quotes(x):
@@ -63,11 +65,6 @@ class BashVisitor(NodeVisitor):
         return f"if ({self.visit(op.if_expr)}):{then_expr}{else_expr}\n"
 
     def visit_Call(self, node):
-        def str_quote(x):
-            if type(x) == str:
-                return f"\"{x}\""
-            else:
-                return x
         args = ' '.join([self.visit(str_quote(arg)) for arg in node.args])
         return f"{node.cmd} {args}"
 

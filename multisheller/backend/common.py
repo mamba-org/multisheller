@@ -1,3 +1,9 @@
+def str_quote(x):
+    if type(x) is str:
+        return f"\"{x}\""
+    else:
+        return x
+
 sh_path_functions = """
 # Taken from http://www.linuxfromscratch.org/blfs/view/svn/postlfs/profile.html
 # Functions to help us manage paths.  Second argument is the name of the

@@ -72,11 +72,11 @@ class BashVisitor(NodeVisitor):
         if node.op == 'is_dir':
             return f"-d {self.visit(node.lhs)}"
         if node.op == 'path_remove':
-            return "path=(${path[@]:#" + self.visit(node.lhs) + "})"
+            return "path=(${path[@]:#" + ensure_quotes(self.visit(node.lhs)) + "})"
         if node.op == 'path_append':
-            return f"path+=({self.visit(node.lhs)})"
+            return f"path+=({ensure_quotes(self.visit(node.lhs))})"
         if node.op == 'path_prepend':
-            return f"path=({self.visit(node.lhs)} $path)"
+            return f"path=({ensure_quotes(self.visit(node.lhs))} $path)"
 
     def visit_default(self, node):
         return str(node)

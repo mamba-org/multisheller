@@ -5,7 +5,7 @@ def ensure_quotes(x):
     if x[0] == '"' or x[0] == '\'' and x[-1] == x[0]:
       return x
     else:
-      return f"\"{re.escape(x)}\""
+      return f"\"{(x)}\""
 
 
 class CmdExeVisitor(NodeVisitor):
@@ -62,6 +62,21 @@ class CmdExeVisitor(NodeVisitor):
 
         return f"if {self.visit(op.if_expr)} {then_expr}{else_expr}\n"
 
+    def visit_PathOp(self, node):
+        q = ensure_quotes
+        if node.op == 'join':
+            return f"{self.visit(node.lhs)}\\{self.visit(node.rhs)}"
+        elif node.op == 'is_file':
+            return f"exist {self.visit(node.lhs)}"
+        if node.op == 'is_dir':
+            return f"exist {self.visit(node.lhs)}"
+        if node.op == 'path_remove':
+            return f"call :removeFromPath {ensure_quotes(self.visit(node.lhs))}"
+        if node.op == 'path_append':
+            return f"set PATH=%PATH%;{self.visit(node.lhs)}"
+        if node.op == 'path_prepend':
+            return f"set PATH={self.visit(node.lhs)};%PATH%"
+
     def visit_Call(self, op):
         if op.cmd == 'echo':
             # return f"{op.cmd} {ensure_quotes(' '.join(op.args))}"
@@ -71,11 +86,44 @@ class CmdExeVisitor(NodeVisitor):
     def visit_default(self, node):
         return str(node)
 
+cmd_exe_funcs = """
+@echo off
+goto start:
+
+@REM code below borrowed from https://stackoverflow.com/a/1430570 (CC-BY-SA 2.5)
+@REM Author: Cheeso, Sep 16, 2009
+
+:removeFromPath
+SETLOCAL ENABLEDELAYEDEXPANSION
+
+@REM  ~fs = remove quotes, full path, short names
+set fqElement=%~fs1
+
+@REM convert path to a list of quote-delimited strings, separated by spaces
+set fpath="%PATH:;=" "%"
+
+@REM iterate through those path elements
+for %%p in (%fpath%) do (
+    @REM  ~fs = remove quotes, full path, short names
+    set p2=%%~fsp
+    @REM is this element NOT the one we want to remove?
+    if /i NOT "!p2!"=="%fqElement%" (
+        if _!tpath!==_ (set tpath=%%~p) else (set tpath=!tpath!;%%~p)
+    )
+)
+
+set path=!tpath!
+ENDLOCAL & set path=%tpath%
+goto :EOF
+
+:start
+"""
+
 def to_script(script):
-    res = ['@echo off']
+    res = []
     visitor = CmdExeVisitor()
 
     for cmd in script.cmds:
         res.append(visitor.visit(cmd))
 
-    return '\n'.join(res)
+    return cmd_exe_funcs + '\n'.join(res)

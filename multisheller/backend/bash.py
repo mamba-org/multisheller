@@ -6,7 +6,7 @@ def ensure_quotes(x):
     if x[0] == '"' or x[0] == '\'' and x[-1] == x[0]:
       return x
     else:
-      return f"\"{re.escape(x)}\""
+      return f"\"{x}\""
 
 
 class BashVisitor(NodeVisitor):
@@ -72,11 +72,11 @@ class BashVisitor(NodeVisitor):
         if node.op == 'is_dir':
             return f"-d {self.visit(node.lhs)}"
         if node.op == 'path_remove':
-            return f"pathremove {self.visit(node.lhs)}"
+            return f"pathremove {ensure_quotes(self.visit(node.lhs))}"
         if node.op == 'path_append':
-            return f"pathappend {self.visit(node.lhs)}"
+            return f"pathappend {ensure_quotes(self.visit(node.lhs))}"
         if node.op == 'path_prepend':
-            return f"pathprepend {self.visit(node.lhs)}"
+            return f"pathprepend {ensure_quotes(self.visit(node.lhs))}"
 
     def visit_default(self, node):
         return str(node)
