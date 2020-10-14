@@ -1,4 +1,5 @@
 from multisheller import cmds
+from .common import *
 from .visitor import NodeVisitor
 import re
 
@@ -78,10 +79,25 @@ class PowerShellVisitor(NodeVisitor):
 
         return f"if ({self.visit(op.if_expr)}) {then_expr}{else_expr}\n"
 
-    def visit_Call(self, op):
-        if op.cmd == 'echo':
-            return f"echo {ensure_quotes(' '.join(op.args))}"
-        return f"{op.cmd} {' '.join(op.args)}"
+    def visit_PathOp(self, node):
+        q = ensure_quotes
+        if node.op == 'join':
+            return f"(Join-Path -Path {self.visit(node.lhs)} -ChildPath {self.visit(node.rhs)})"
+        elif node.op == 'is_file':
+            return f"Test-Path {self.visit(node.lhs)} -PathType Leaf"
+        if node.op == 'is_dir':
+            return f"Test-Path {self.visit(node.lhs)}"
+        if node.op == 'path_remove':
+            return "$Env:PATH = ($Env:PATH.Split(';') | Where-Object { $_ -ne '" + self.visit(node.lhs) + "' }) -join ';'"
+        if node.op == 'path_append':
+            return f"$Env:PATH+=\";{self.visit(node.lhs)}\""
+        if node.op == 'path_prepend':
+            return f"$Env:PATH=\"{self.visit(node.lhs)};$Env:PATH\""
+
+    def visit_Call(self, node):
+        args = ' '.join([self.visit(str_quote(arg)) for arg in node.args])
+        return f"{node.cmd} {args}"
+
 
     def visit_default(self, node):
         return str(node)
