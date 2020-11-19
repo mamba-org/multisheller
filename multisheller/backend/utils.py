@@ -5,8 +5,8 @@ import os
 suffixes = {
     'cmdexe': '.bat',
     'bash': '.sh',
-    'zsh': '.sh',
-    'xonsh': '.sh',
+    'zsh': '.zsh',
+    'xonsh': '.xsh',
     'powershell': '.ps1',
 }
 
@@ -18,9 +18,9 @@ translators = {
     'powershell': powershell,
 }
 
-def write_script(path, commands, interpreter):
+def write_script(path, commands, interpreter, fname='script'):
     s = cmds.Script(commands)
-    fname = os.path.join(path, 'script' + suffixes[interpreter])
+    fname = os.path.join(path, fname + suffixes[interpreter])
 
     with open(fname, 'w') as f:
         s = translators[interpreter].to_script(s)
