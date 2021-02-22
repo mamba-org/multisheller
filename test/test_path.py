@@ -45,7 +45,8 @@ def test_path_remove(tmp_path, interpreter):
     assert(lines[0] == lines[5])
 
 @pytest.mark.parametrize("interpreter", get_interpreters())
-def test_list_remove(tmp_path, interpreter):
+@pytest.mark.parametrize("env_variable_name", ['RANDOM_LIST_ENV_VAR_DIRS', 'RANDOM_LIST_ENV_VAR'])
+def test_list_remove(tmp_path, interpreter, env_variable_name):
     if running_os == 'win':
         preexisting_path = 'C:\\Users\\lib'
         fake_path = 'C:\\Users\\bin'
@@ -55,20 +56,20 @@ def test_list_remove(tmp_path, interpreter):
         fake_path = "/tmp/abc"
         weird_path = "/tmp/Programs (y75)/"
     s = [
-        sys.list_prepend('RANDOM_LIST_ENV_VAR', preexisting_path),
-        cmds.echo(cmds.env('RANDOM_LIST_ENV_VAR')),
-        sys.list_prepend('RANDOM_LIST_ENV_VAR', fake_path),
-        cmds.echo(cmds.env('RANDOM_LIST_ENV_VAR')),
-        sys.list_remove('RANDOM_LIST_ENV_VAR', fake_path),
-        cmds.echo(cmds.env('RANDOM_LIST_ENV_VAR')),
-        sys.list_prepend('RANDOM_LIST_ENV_VAR', fake_path),
-        sys.list_append('RANDOM_LIST_ENV_VAR', fake_path),
-        cmds.echo(cmds.env('RANDOM_LIST_ENV_VAR')),
-        sys.list_remove('RANDOM_LIST_ENV_VAR', fake_path),
-        cmds.echo(cmds.env('RANDOM_LIST_ENV_VAR')),
-        sys.list_prepend('RANDOM_LIST_ENV_VAR', weird_path),
-        sys.list_remove('RANDOM_LIST_ENV_VAR', weird_path),
-        cmds.echo(cmds.env('RANDOM_LIST_ENV_VAR')),
+        sys.list_prepend(env_variable_name, preexisting_path),
+        cmds.echo(cmds.env(env_variable_name)),
+        sys.list_prepend(env_variable_name, fake_path),
+        cmds.echo(cmds.env(env_variable_name)),
+        sys.list_remove(env_variable_name, fake_path),
+        cmds.echo(cmds.env(env_variable_name)),
+        sys.list_prepend(env_variable_name, fake_path),
+        sys.list_append(env_variable_name, fake_path),
+        cmds.echo(cmds.env(env_variable_name)),
+        sys.list_remove(env_variable_name, fake_path),
+        cmds.echo(cmds.env(env_variable_name)),
+        sys.list_prepend(env_variable_name, weird_path),
+        sys.list_remove(env_variable_name, weird_path),
+        cmds.echo(cmds.env(env_variable_name)),
     ]
     stdout, stderr = call_interpreter(s, tmp_path, interpreter)
     print(stdout)

@@ -78,6 +78,14 @@ class BashVisitor(NodeVisitor):
         if node.op == 'path_prepend':
             return f"pathprepend {ensure_quotes(self.visit(node.lhs))}"
 
+    def visit_ListOp(self, node):
+        if node.op == 'list_remove':
+            return f"pathremove {ensure_quotes(self.visit(node.rhs))} {self.visit(node.lhs)}"
+        if node.op == 'list_append':
+            return f"pathappend {ensure_quotes(self.visit(node.rhs))} {self.visit(node.lhs)}"
+        if node.op == 'list_prepend':
+            return f"pathprepend {ensure_quotes(self.visit(node.rhs))} {self.visit(node.lhs)}"
+
     def visit_default(self, node):
         return str(node)
 
