@@ -78,6 +78,17 @@ class BashVisitor(NodeVisitor):
         if node.op == 'path_prepend':
             return f"path=({ensure_quotes(self.visit(node.lhs))} $path)"
 
+    def visit_ListOp(self, node):
+        # For generic scalar list variables, we can't rely on having a tied array
+        # as it happens for PATH/path
+        # (see https://unix.stackexchange.com/questions/532148/what-is-the-difference-between-path-and-path-lowercase-versus-uppercase-with)
+        if node.op == 'list_remove':
+            return f"listremove {ensure_quotes(self.visit(node.rhs))} {self.visit(node.lhs)}"
+        if node.op == 'list_append':
+            return f"listappend {ensure_quotes(self.visit(node.rhs))} {self.visit(node.lhs)}"
+        if node.op == 'list_prepend':
+            return f"listprepend {ensure_quotes(self.visit(node.rhs))} {self.visit(node.lhs)}"
+
     def visit_default(self, node):
         return str(node)
 
@@ -85,7 +96,49 @@ def to_script(script):
     res = []
     visitor = BashVisitor()
 
+    zsh_path_functions = """
+# Inspired from http://www.linuxfromscratch.org/blfs/view/svn/postlfs/profile.html
+# and ported to zsh.
+# Functions to help us manage paths.  Second argument is the name of the
+# list variable to be modified
+listremove () {
+        local PATHVARIABLE=${2}
+        local array_helper
+        local scalar_helper=${(P)PATHVARIABLE}
+
+        typeset -T scalar_helper array_helper
+
+        array_helper=(${array_helper[@]:#${1}})
+
+        export $PATHVARIABLE=${scalar_helper}
+}
+
+listprepend () {
+        local PATHVARIABLE=${2}
+        local array_helper
+        local scalar_helper=${(P)PATHVARIABLE}
+
+        typeset -T scalar_helper array_helper
+
+        array_helper=(${1} ${array_helper})
+
+        export $PATHVARIABLE=${scalar_helper}
+}
+
+listappend () {
+        local PATHVARIABLE=${2}
+        local array_helper
+        local scalar_helper=${(P)PATHVARIABLE}
+
+        typeset -T scalar_helper array_helper
+
+        array_helper+=(${1})
+
+        export $PATHVARIABLE=${scalar_helper}
+}
+"""
+
     for cmd in script.cmds:
         res.append(visitor.visit(cmd))
 
-    return '\n'.join(res)
+    return zsh_path_functions + '\n'.join(res)

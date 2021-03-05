@@ -94,6 +94,15 @@ class PowerShellVisitor(NodeVisitor):
         if node.op == 'path_prepend':
             return f"$Env:PATH=\"{self.visit(node.lhs)};$Env:PATH\""
 
+    def visit_ListOp(self, node):
+        q = ensure_quotes
+        if node.op == 'list_remove':
+            return f"$Env:{self.visit(node.lhs)} = ($Env:{self.visit(node.lhs)}.Split(';')" + " | Where-Object { $_ -ne '" + self.visit(node.rhs) + "' }) -join ';'"
+        if node.op == 'list_append':
+            return f"$Env:{self.visit(node.lhs)}+=\";{self.visit(node.rhs)}\""
+        if node.op == 'list_prepend':
+            return f"$Env:{self.visit(node.lhs)}=\"{self.visit(node.rhs)};$Env:{self.visit(node.lhs)}\""
+
     def visit_Call(self, node):
         args = ' '.join([self.visit(str_quote(arg)) for arg in node.args])
         return f"{node.cmd} {args}"

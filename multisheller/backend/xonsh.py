@@ -84,6 +84,15 @@ class BashVisitor(NodeVisitor):
         if node.op == 'path_prepend':
             return f"$PATH.insert(0, {q(self.visit(node.lhs))})"
 
+    def visit_ListOp(self, node):
+        q = ensure_quotes
+        if node.op == 'list_remove':
+            return f"listremove({q(self.visit(node.rhs))}, {q(self.visit(node.lhs))})"
+        if node.op == 'list_append':
+            return f"listappend({q(self.visit(node.rhs))}, {q(self.visit(node.lhs))})"
+        if node.op == 'list_prepend':
+            return f"listprepend({q(self.visit(node.rhs))}, {q(self.visit(node.lhs))})"
+
     def visit_default(self, node):
         return str(node)
 
@@ -97,7 +106,44 @@ def to_script(script):
     res = []
     visitor = BashVisitor()
 
+    xonsh_path_functions = """
+# Inspired from http://www.linuxfromscratch.org/blfs/view/svn/postlfs/profile.html
+# and ported to xonsh.
+# Functions to help us manage paths.  Second argument is the name of the
+# list variable to be modified
+def listremove(elemToRemove, varToModify):
+    # xonsh has diffent types for the variables depending on their name,
+    # see https://xon.sh/tutorial.html#environment-types
+    # so we need to always distinguish three cases:
+    # * the variable does not exist
+    # * the variable is a string
+    # * the variable is a list
+    if (varToModify not in ${...}):
+        return
+    elif (type(${varToModify}) == str):
+        ${varToModify} = os.pathsep.join(list(filter(lambda el: el != elemToRemove, ${varToModify}.split(os.pathsep))))
+    elif (type(${varToModify}) == type($PATH)):
+        while(elemToRemove in ${varToModify}): ${varToModify}.remove(elemToRemove)
+
+def listprepend(elemToPrepend, varToModify):
+    if (varToModify not in ${...}):
+        ${varToModify}=elemToPrepend
+    elif (type(${varToModify}) == str):
+        ${varToModify} = os.pathsep.join([elemToPrepend] + ${varToModify}.split(os.pathsep))
+    elif (type(${varToModify}) == type($PATH)):
+        ${varToModify}.insert(0, elemToPrepend)
+
+def listappend(elemToAppend, varToModify):
+    if (varToModify not in ${...}):
+        ${varToModify}=elemToAppend
+    elif (type(${varToModify}) == str):
+        ${varToModify} = os.pathsep.join(${varToModify}.split(os.pathsep) + [elemToAppend])
+    elif (type(${varToModify}) == type($PATH)):
+        ${varToModify}.append(elemToAppend)
+
+"""
+
     for cmd in script.cmds:
         res.append(visitor.visit(cmd))
 
-    return xonsh_imports + '\n'.join(res)
+    return xonsh_imports + xonsh_path_functions + '\n'.join(res)

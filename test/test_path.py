@@ -45,6 +45,51 @@ def test_path_remove(tmp_path, interpreter):
     assert(lines[0] == lines[5])
 
 @pytest.mark.parametrize("interpreter", get_interpreters())
+@pytest.mark.parametrize("env_variable_name", ['RANDOM_LIST_ENV_VAR_DIRS', 'RANDOM_LIST_ENV_VAR'])
+def test_list_remove(tmp_path, interpreter, env_variable_name):
+    if running_os == 'win':
+        preexisting_path = 'C:\\Users\\lib'
+        fake_path = 'C:\\Users\\bin'
+        weird_path = "C:\\tmp\\Programs (y75)\\"
+    else:
+        preexisting_path = "/tmp/lib"
+        fake_path = "/tmp/abc"
+        weird_path = "/tmp/Programs (y75)/"
+    s = [
+        sys.list_prepend(env_variable_name, preexisting_path),
+        cmds.echo(cmds.env(env_variable_name)),
+        sys.list_prepend(env_variable_name, fake_path),
+        cmds.echo(cmds.env(env_variable_name)),
+        sys.list_remove(env_variable_name, fake_path),
+        cmds.echo(cmds.env(env_variable_name)),
+        sys.list_prepend(env_variable_name, fake_path),
+        sys.list_append(env_variable_name, fake_path),
+        cmds.echo(cmds.env(env_variable_name)),
+        sys.list_remove(env_variable_name, fake_path),
+        cmds.echo(cmds.env(env_variable_name)),
+        sys.list_prepend(env_variable_name, weird_path),
+        sys.list_remove(env_variable_name, weird_path),
+        cmds.echo(cmds.env(env_variable_name)),
+    ]
+    stdout, stderr = call_interpreter(s, tmp_path, interpreter)
+    print(stdout)
+    print(stderr)
+    lines = stdout.splitlines()
+    assert(lines[0] == lines[2])
+    assert(fake_path in lines[1])
+    wtmp = lines[1]
+    path_elems = wtmp.split(os.pathsep)
+    assert(path_elems[0] == fake_path)
+
+    assert(fake_path in lines[3])
+    wtmp = lines[3]
+    path_elems = wtmp.split(os.pathsep)
+    assert(path_elems[0] == fake_path)
+    assert(path_elems[-1] == fake_path)
+    assert(lines[0] == lines[4])
+    assert(lines[0] == lines[5])
+
+@pytest.mark.parametrize("interpreter", get_interpreters())
 def test_is_dir_file(tmp_path, interpreter):
     if running_os == 'win':
         existing_folder = 'C:\\Users'
