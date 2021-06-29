@@ -6,7 +6,7 @@ def ensure_quotes(x):
     if x[0] == '"' or x[0] == '\'' and x[-1] == x[0]:
       return x
     else:
-      return f"\"{re.escape(x)}\""
+      return f"\"{x}\""
 
 
 class BashVisitor(NodeVisitor):
