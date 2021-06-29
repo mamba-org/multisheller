@@ -9,7 +9,6 @@ If one writes the activation or deactivation script using this project, it is tr
 - powershell
 - cmd.bat
 - zsh
-- fish
 - xonsh
 
 This grew out of a frustration on how hard it is to write bash / cmd.bat scripts that work cross-platform and for all shells that people use (esp. powershell).
