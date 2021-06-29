@@ -29,7 +29,7 @@ class PowerShellVisitor(NodeVisitor):
 
         if op.op in ('export', 'assign'):
             if op.op == 'export':
-                return f"$Env:{self.visit(op.lhs)}={self.visit(op.rhs)}"
+                return f"$Env:{self.visit(op.lhs)}={ensure_quotes(self.visit(op.rhs))}"
             else:
                 return f"{self.visit(op.lhs)}={self.visit(op.rhs)}"
         return f"({self.visit(op.lhs)}) {op_map[op.op]} ({self.visit(op.rhs)})"
