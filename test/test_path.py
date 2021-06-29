@@ -120,8 +120,12 @@ def test_path_join(tmp_path, interpreter):
     
 @pytest.mark.parametrize("interpreter", get_interpreters())
 def test_path_join_expanding_env_var(tmp_path, interpreter):
+    if running_os == 'win':
+        tmp_prefix = "C:\\tmp"
+    else:
+        tmp_prefix = "/tmp"
     s = [
-        cmds.export("TMP_PREFIX", "/tmp"),
+        cmds.export("TMP_PREFIX", tmp_prefix),
         cmds.export("TMP_PREFIX_TEST", path.join(cmds.env("TMP_PREFIX"), "test")),
         cmds.echo(cmds.env("TMP_PREFIX_TEST")),
     ]
@@ -129,4 +133,4 @@ def test_path_join_expanding_env_var(tmp_path, interpreter):
     print(stdout)
     print(stderr)
     lines = [Path(l) for l in stdout.splitlines()]
-    assert(lines == [Path("/tmp/test")])
+    assert(lines == [Path(tmp_prefix + "/test")])
