@@ -117,3 +117,16 @@ def test_path_join(tmp_path, interpreter):
     print(stderr)
     lines = [Path(l) for l in stdout.splitlines()]
     assert(lines == [Path("/tmp/test")])
+    
+@pytest.mark.parametrize("interpreter", get_interpreters())
+def test_path_join_expanding_env_var(tmp_path, interpreter):
+    s = [
+        cmds.export('TMP_PREFIX', '/tmp'),
+        cmds.export('TMP_PREFIX_TEST', path.join(cmds.env('TMP_PREFIX'), 'test')),
+        cmds.echo(cmds.env('TMP_PREFIX_TEST')),
+    ]
+    stdout, stderr = call_interpreter(s, tmp_path, interpreter)
+    print(stdout)
+    print(stderr)
+    lines = [Path(l) for l in stdout.splitlines()]
+    assert(lines == [Path("/tmp/test")])
