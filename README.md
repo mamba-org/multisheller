@@ -15,23 +15,68 @@ This grew out of a frustration on how hard it is to write bash / cmd.bat scripts
 
 Examples:
 
-```py
-from multisheller import cmds, path
+If you save:
 
-conda_prefix = cmds.env("CONDA_PREFIX")
-print(cmds.if_(conda_prefix == "test").then_(
+```py
+if_(conda_prefix == "test").then_(
 	cmds.export("TEST_VARIABLE", path.join(cmds.env("CONDA_PREFIX"), "test/for/something"))
-))
+)
 ```
 
-This prints:
+in a file called `project_activate.msh`, and you convert it with:
+
+~~~
+multisheller project_activate.msh
+~~~
+
+This will generate many shell files, such as `project_activate.bash`, `project_activate.bat`, one for each supported shell.
+
+For example, if you open the `project_activate.bash` you will find:
 
 ```sh
-if [ $CONDA_PREFIX == test ];
-then;
+# Taken from http://www.linuxfromscratch.org/blfs/view/svn/postlfs/profile.html
+# Functions to help us manage paths.  Second argument is the name of the
+# path variable to be modified (default: PATH)
+pathremove () {
+        local IFS=':'
+        local NEWPATH
+        local DIR
+        local PATHVARIABLE=${2:-PATH}
+        for DIR in ${!PATHVARIABLE} ; do
+                if [ "$DIR" != "$1" ] ; then
+                  NEWPATH=${NEWPATH:+$NEWPATH:}$DIR
+                fi
+        done
+        export $PATHVARIABLE="$NEWPATH"
+}
+
+pathprepend () {
+        # pathremove $1 $2
+        local PATHVARIABLE=${2:-PATH}
+        export $PATHVARIABLE="$1${!PATHVARIABLE:+:${!PATHVARIABLE}}"
+}
+
+pathappend () {
+        # pathremove $1 $2
+        local PATHVARIABLE=${2:-PATH}
+        export $PATHVARIABLE="${!PATHVARIABLE:+${!PATHVARIABLE}:}$1"
+}
+if [[ $CONDA_PREFIX -eq test ]];
+then
     export TEST_VARIABLE=$CONDA_PREFIX/test/for/something
 fi;
 ```
 
-Which, at this point, might not even be correct bash. But it hopefully helps to illustrate the idea.
-Only a rudimentary bash backend has been implemented so far!
+while in `project_activate.ps1` :
+~~~
+if (($Env:CONDA_PREFIX) -eq (test)) {
+    $Env:TEST_VARIABLE=$(Join-Path -Path $Env:CONDA_PREFIX -ChildPath test/for/something)
+}
+~~~
+
+If you want to customize the name of the converted scripts, you can use the `--output` option of `multisheller` :
+~~~
+multisheller project_activate.msh --output setup
+~~~
+
+This will create the `setup.bash`, `setup.zsh`, `setup.bat`, ... files.
