@@ -14,65 +14,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
-      - name: install micromamba
-        run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | tar -xvj bin/micromamba --strip-components=1
-          else
-            wget -qO- https://micromamba.snakepit.net/api/micromamba/osx-64/latest | tar -xvj bin/micromamba
-            mv bin/micromamba ./micromamba
-          fi
-          ./micromamba shell init -s bash -p ~/micromamba
-          mkdir -p ~/micromamba/pkgs/
-      - name: install deps
-        shell: bash -l {0}
-        run: |
-          export MAMBA_ROOT_PREFIX=~/micromamba
-          export MAMBA_EXE=$(pwd)/micromamba
-          . $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh
-          ./micromamba create -f ./test/env_unix.yaml -y
+      - name: Install environment from environment.yml
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: test/environment.yml
       - name: run tests
         shell: bash -l {0}
         run: |
-          export MAMBA_ROOT_PREFIX=~/micromamba
-          export MAMBA_EXE=$(pwd)/micromamba
-          . $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh
-          micromamba activate test
           pip install -e .
           pytest test/
-
-  test_win_shells:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest]
-    steps:
-      - uses: actions/checkout@v2
-      - name: install micromamba
-        shell: powershell
-        run: |
-          Invoke-Webrequest -URI https://micromamba.snakepit.net/api/micromamba/win-64/latest -OutFile micromamba.tar.bz2
-          C:\PROGRA~1\7-Zip\7z.exe x micromamba.tar.bz2 -aoa
-          C:\PROGRA~1\7-Zip\7z.exe x micromamba.tar -ttar -aoa -r Library\bin\micromamba.exe
-          MOVE -Force Library\bin\micromamba.exe micromamba.exe
-          .\micromamba.exe shell init -s powershell -p ~/micromamba
-      - name: install deps
-        shell: powershell
-        run: |
-          $Env:MAMBA_ROOT_PREFIX=(Join-Path -Path $HOME -ChildPath micromamba)
-          $Env:MAMBA_EXE=(Join-Path -Path (Get-Location) -ChildPath micromamba.exe)
-          .\micromamba.exe create -f ./test/env_win.yaml -y
-      - name: run tests
-        shell: powershell
-        run: |
-          # micromamba activate test
-          ~/micromamba/envs/test/Scripts/pip.exe install -e .
-          ~/micromamba/envs/test/Scripts/pytest.exe test/
-          if ($LastExitCode -ne 0) {
-            exit 1
-          }
-
